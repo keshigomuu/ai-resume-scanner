@@ -1,5 +1,3 @@
-# backend/suggestions.py
-
 import os
 import openai
 import json
