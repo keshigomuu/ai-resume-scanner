@@ -5,8 +5,9 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
 from typing import List, Set
 from resume_parser import extract_text_from_pdf
+from summarizer import summarize_resume_via_chatgpt
 from skill_matcher import extract_skills, compare_skills
-from suggestions import generate_suggestions
+from suggestions import generate_suggestions_via_chatgpt
 
 app = FastAPI(title="AI Resume–JD Skill Matcher")
 
@@ -16,48 +17,55 @@ class MatchResult(BaseModel):
     missing_skills: List[str]
     suggestions: List[str]
 
-
 @app.post("/match/", response_model=MatchResult)
 async def match_resume_jd(
     resume_file: UploadFile = File(...),
     jd_text: str = Form(...)
 ):
-    # 1. Ensure resume is PDF
+    # 1. Validate that resume is PDF
     if not resume_file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Resume must be a PDF.")
 
-    # 2. Read resume bytes & extract text
+    # 2. Extract full resume text
     resume_bytes = await resume_file.read()
-    resume_text = extract_text_from_pdf(resume_bytes)
+    full_resume_text = extract_text_from_pdf(resume_bytes)
 
-    # 3. JD is already plain text (from the textarea)
+    # 3. Summarize resume
+    try:
+        resume_summary = summarize_resume_via_chatgpt(full_resume_text)
+    except Exception:
+        resume_summary = full_resume_text  # fallback if summarization fails
+
+    # 4. JD text is passed in as plain text
     raw_jd = jd_text
 
-    # 4. Extract skill sets (both case-insensitive, using PhraseMatcher)
-    resume_skills = extract_skills(resume_text)
+    # 5. Extract skills from the summary and from the JD
+    resume_skills = extract_skills(resume_summary)
     jd_skills = extract_skills(raw_jd)
 
-    # 5. If jd_skills is empty, return a quick warning
     if not jd_skills:
         raise HTTPException(
             status_code=422,
-            detail="No recognizable skills were found in the job description. "
-                   "Please make sure you’ve pasted known skill keywords (e.g., Python, Docker, AWS, etc.)."
+            detail="No recognizable skills were found in the job description."
         )
 
-    # 6. Compare skill sets & generate suggestions
+    # 6. Compare skill sets
     comparison = compare_skills(resume_skills, jd_skills)
-    suggestions = generate_suggestions(comparison["missing"])
 
-    # 7. Return JSON
-    result = MatchResult(
+    # 7. Generate ChatGPT-powered suggestions
+    chatgpt_suggestions = generate_suggestions_via_chatgpt(
+        missing_skills=comparison["missing"],
+        resume_summary=resume_summary,
+        jd_text=raw_jd
+    )
+
+    # 8. Return final response
+    return MatchResult(
         match_percentage=comparison["match_percentage"],
         matched_skills=comparison["matched"],
         missing_skills=comparison["missing"],
-        suggestions=suggestions
+        suggestions=chatgpt_suggestions
     )
-    return result
-
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
