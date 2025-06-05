@@ -1,5 +1,3 @@
-# backend/summarizer.py
-
 import os
 import openai
 
