@@ -6,6 +6,10 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
     const resumeInput = document.getElementById("resume");
     const jdTextarea = document.getElementById("jdtext");
     const resultDiv = document.getElementById("results");
+    const spinner = document.getElementById("spinner");
+  
+    // Clear previous results and hide any errors
+    resultDiv.innerHTML = "";
   
     // Validate inputs
     if (resumeInput.files.length === 0) {
@@ -23,16 +27,26 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
     formData.append("jd_text", jdTextarea.value);
   
     try {
+      // Show spinner
+      spinner.style.display = "block";
+  
       // Call FastAPI endpoint
       const response = await fetch("http://localhost:8000/match/", {
         method: "POST",
         body: formData,
       });
   
+      // Hide spinner once response returns (success or error)
+      spinner.style.display = "none";
+  
       if (!response.ok) {
         // Display error payload if status is not OK
         const errorPayload = await response.json();
-        resultDiv.innerHTML = `<pre style="color:red">${JSON.stringify(errorPayload, null, 2)}</pre>`;
+        resultDiv.innerHTML = `<div class="error"><pre>${JSON.stringify(
+          errorPayload,
+          null,
+          2
+        )}</pre></div>`;
         return;
       }
   
@@ -42,8 +56,12 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
       let html = `
         <h2>Results</h2>
         <p><strong>Match %:</strong> ${data.match_percentage}%</p>
-        <p><strong>Matched Skills:</strong> ${data.matched_skills.join(", ") || "None"}</p>
-        <p><strong>Missing Skills:</strong> ${data.missing_skills.join(", ") || "None"}</p>
+        <p><strong>Matched Skills:</strong> ${
+          data.matched_skills.join(", ") || "None"
+        }</p>
+        <p><strong>Missing Skills:</strong> ${
+          data.missing_skills.join(", ") || "None"
+        }</p>
         <h3>Rewritten Bullets:</h3>
         <ul>
       `;
@@ -61,10 +79,14 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
       html += `</ul>`;
   
       resultDiv.innerHTML = html;
-  
     } catch (err) {
+      // Hide spinner
+      spinner.style.display = "none";
+  
       console.error(err);
-      resultDiv.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+      resultDiv.innerHTML = `<div class="error"><p>Error: ${
+        err.message
+      }</p></div>`;
     }
   });
   

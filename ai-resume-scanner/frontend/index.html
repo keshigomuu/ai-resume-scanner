@@ -1,24 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Resume Checker</title>
+
+  <!-- Google Font: Inter -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* Reset & base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: "Inter", sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Container */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #2e3a59;
+      margin-bottom: 0.5rem;
+    }
+    header p {
+      font-size: 1rem;
+      color: #555;
+    }
+
+    /* Card */
+    .card {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Form Styles */
+    form label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: #2e3a59;
+    }
+    form input[type="file"],
+    form textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      color: #333;
+      background-color: #fafafa;
+      transition: border-color 0.2s;
+    }
+    form input[type="file"]:focus,
+    form textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background-color: #ffffff;
+    }
+    form textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    form button {
+      margin-top: 1rem;
+      background-color: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    form button:hover {
+      background-color: #4338ca;
+    }
+
+    /* Spinner Styles */
+    #spinner {
+      display: none; /* Hidden by default */
+      margin: 2rem auto;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4f46e5;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Results */
+    #results {
+      margin-top: 1.5rem;
+    }
+    #results h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2e3a59;
+      margin-bottom: 1rem;
+    }
+    #results p {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    #results ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    #results li {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: #444;
+    }
+
+    /* Error styling */
+    .error {
+      color: #b91c1c;
+      background-color: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 1rem;
+      font-size: 0.95rem;
+      margin-top: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+      header h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Resume ↔ JD Skill Match</h1>
+  <div class="container">
+    <header>
+      <h1>AI Resume Checker</h1>
+      <p>Match your resume to a job description and get tailored suggestions.</p>
+    </header>
 
-  <form id="upload-form">
-    <label>Resume (PDF):</label><br />
-    <input type="file" id="resume" accept=".pdf" required /><br /><br />
+    <div class="card">
+      <form id="upload-form">
+        <label for="resume">Resume (PDF):</label>
+        <input type="file" id="resume" accept=".pdf" required />
 
-    <label>Job Description (plain text):</label><br />
-    <textarea id="jdtext" rows="8" cols="60" placeholder="Paste the job description here…" required></textarea><br /><br />
+        <label for="jdtext" style="margin-top: 1rem;">Job Description (plain text):</label>
+        <textarea
+          id="jdtext"
+          placeholder="Paste the job description here…"
+          required
+        ></textarea>
 
-    <button type="submit">Submit</button>
-  </form>
+        <button type="submit">Submit</button>
+      </form>
 
-  <hr />
-  <div id="results"></div>
+      <!-- Spinner displayed during loading -->
+      <div id="spinner"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>
