@@ -31,7 +31,7 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
       spinner.style.display = "block";
   
       // Call FastAPI endpoint
-      const response = await fetch("http://localhost:8000/match/", {
+      const response = await fetch("https://ai-resume-scanner-backend.onrender.com", {
         method: "POST",
         body: formData,
       });
